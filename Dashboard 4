@@ -1,0 +1,172 @@
+<form>
+  <label>Lab 4 - Web Store Server Errors v3</label>
+  <search id="baseSearch">
+    <query>| tstats summariesonly=t count from
+              datamodel="bcg_ws_student1" by _time, host, sourcetype, 
+              big_ws_root_event.status, big_ws_root_event.action1, 
+              big_ws_root_event.product_name1, big_ws_root_event.price1 
+              span=1s | rename big_ws_root_event.status as status, 
+              big_ws_root_event.action1 as action, 
+              big_ws_root_event.product_name1 as product_name, 
+              big_ws_root_event.price1 as price</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+    <sampleRatio>1</sampleRatio>
+    <refresh>5m</refresh>
+  </search>
+  <fieldset submitButton="false">
+    <input type="time" token="time_tok" searchWhenChanged="true">
+      <label></label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Purchases &amp; Lost Sales</title>
+      <chart>
+        <search base="baseSearch">
+          <query>search (action=remove OR action=purchase)
+| chart sum(price) as totalSales by product_name, action
+| rename product_name as "Product Name", remove as "Lost Sales", purchase as Purchases</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="charting.fieldColors">{"Purchases":0xEFC94C,"Lost Sales":0xED553B}</option>
+        <option name="link.inspectSearch.visible">0</option>
+        <option name="link.exportResults.visible">0</option>
+        <option name="link.openSearch.visible">0</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most Common Errors by Host</title>
+      <table>
+        <search base="baseSearch">
+          <query> search status&gt;399 | chart count by host, status, limit=3 useother=f</query>
+        </search>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="link.exportResults.visible">0</option>
+        <option name="link.inspectSearch.visible">0</option>
+        <option name="link.openSearch.visible">0</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">true</option>
+        <option name="wrap">true</option>
+        <format type="color" field="400">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="500">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="503">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>All Errors by Host</title>
+      <chart>
+        <search base="baseSearch">
+          <query>search status&gt;399 
+ | timechart count(action) by host</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="link.inspectSearch.visible">0</option>
+        <option name="link.exportResults.visible">0</option>
+        <option name="link.openSearch.visible">0</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Annotated Status Errors</title>
+      <chart>
+        <search base="baseSearch">
+          <query>search status&gt;399 | timechart count by action</query>
+        </search>
+        <search type="annotation">
+          <query>index="sales" sourcetype="bcg_sale_dates" 
+            | eval annotation_category=message
+            | eval annotation_label=Sale_Category
+          </query>
+          <earliest>$time_tok.earliest$</earliest>
+          <latest>$time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="link.inspectSearch.visible">0</option>
+        <option name="link.exportResults.visible">0</option>
+        <option name="link.openSearch.visible">0</option>
+      </chart>
+    </panel>
+  </row>
+</form>
