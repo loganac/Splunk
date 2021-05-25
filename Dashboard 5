@@ -1,0 +1,149 @@
+<form>
+  <label>Lab 5 - Sales Drilldown Destination</label>
+  <fieldset submitButton="false">
+    <input type="text" token="categoryId_tok" searchWhenChanged="true">
+      <label>Enter a category name:</label>
+      <default>*</default>
+    </input>
+    <input type="time" searchWhenChanged="true">
+      <label></label>
+      <default>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Sales Trend: $categoryId_tok$</title>
+      <table>
+        <search>
+          <query>index=sales sourcetype=vendor_sales categoryId=$categoryId_tok|s$ product_name="*" Vendor="*" | stats sparkline(count) as Trend values(Vendor) as "Vendors" values(product_name) as "Products Sold" by VendorCountry | rename VendorCountry as "Country" | sort Country</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>
+
+
+
+
+<form>
+  <label>Lab 5 - Vendor Sales Analysis v2</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="v_country_tok" searchWhenChanged="true">
+      <label>Country</label>
+      <choice value="*">All</choice>
+      <default>*</default>
+      <fieldForLabel>VendorCountry</fieldForLabel>
+      <fieldForValue>VendorCountry</fieldForValue>
+      <search>
+        <query>| inputlookup bcg_vendors
+| search VendorStateProvince=$v_state_tok|s$
+VendorCity=$v_city_tok|s$ | dedup VendorCountry
+| fields VendorCountry | sort VendorCountry</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="v_state_tok" searchWhenChanged="true">
+      <label>State/Province</label>
+      <choice value="*">All</choice>
+      <default>*</default>
+      <fieldForLabel>VendorStateProvince</fieldForLabel>
+      <fieldForValue>VendorStateProvince</fieldForValue>
+      <search>
+        <query>| inputlookup bcg_vendors
+| search VendorCountry=$v_country_tok|s$
+VendorCity=$v_city_tok|s$ | dedup VendorStateProvince | sort VendorStateProvince</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="v_city_tok" searchWhenChanged="true">
+      <label>City</label>
+      <choice value="*">All</choice>
+      <default>*</default>
+      <fieldForLabel>VendorCity</fieldForLabel>
+      <fieldForValue>VendorCity</fieldForValue>
+      <search>
+        <query>| inputlookup bcg_vendors
+| search VendorCountry=$v_country_tok|s$
+VendorStateProvince=$v_state_tok|s$
+| dedup VendorCity
+| fields VendorCity | sort VendorCity</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="radio" token="reset_menus_tok" searchWhenChanged="true">
+      <label>Delete field1 and leave blank</label>
+      <choice value="now">Reset Menus</choice>
+      <default>now</default>
+      <change>
+        <unset token="form.v_country_tok"></unset>
+        <unset token="form.v_state_tok"></unset>
+        <unset token="form.v_city_tok"></unset>
+        <set token="form.reset_menus_tok">no</set>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Vendor Sales by Category</title>
+      <chart>
+        <search>
+          <query>index=sales sourcetype=vendor_sales VendorCountry= $v_country_tok|s$ VendorStateProvince= $v_state_tok|s$ VendorCity= $v_city_tok|s$ | stats count by categoryId</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <drilldown>
+          <link target="_blank">/app/creatingdash/lab_5__sales_drilldown_destination?form.categoryId_tok=$click.value$&amp;earliest=$earliest$&amp;latest=$latest$</link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+</form>
