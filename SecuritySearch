@@ -1,0 +1,14 @@
+index=security
+     [search index=network (username=* OR Username=*)
+     | eval User = coalesce(username,Username)
+     | stats count by User
+     | sort 5 -count
+     | return 5 User]
+   | stats count as events by sourcetype, User
+   | eval securityINFO = if(sourcetype="history_access","User has ".events." badge
+     reader events.","User has ".events." active directory events.")
+   | stats list(securityINFO) as securityINFO by User
+   | lookup employee_lookup USERNAME as User
+   | rename User as activeUser
+   
+   #Useful subsearch to return the list of users on your network and their logins.
